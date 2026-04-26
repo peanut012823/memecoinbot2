@@ -1,8 +1,9 @@
 
 require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
+const axios = require("axios");
 
-const { getNewTokens, getTokenOverview } = require("./moralis");
+const { getTokenData } = require("./data");
 const { getTx } = require("./helius");
 const { analyze } = require("./engine");
 
@@ -11,46 +12,50 @@ const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
 const SENT = new Set();
 
 async function scan(){
+  console.log("Scanning...");
 
-  console.log("Scanning new tokens...");
+  try{
+    const res = await axios.get("https://api.dexscreener.com/latest/dex/pairs/solana");
+    const pairs = res.data?.pairs || [];
 
-  const tokens = await getNewTokens();
+    for(const p of pairs.slice(0, 40)){
+      const token = p.baseToken?.address;
+      if(!token || SENT.has(token)) continue;
 
-  for(const t of tokens){
+      const data = await getTokenData(token);
+      if(!data) continue;
 
-    const token = t.address || t.tokenAddress;
-    if(!token || SENT.has(token)) continue;
+      if(data.liquidity < 800) continue;
 
-    const overview = await getTokenOverview(token);
-    if(!overview) continue;
+      const txs = await getTx(token);
+      const result = analyze(data, txs);
 
-    const txs = await getTx(token);
-
-    const result = analyze(overview, txs);
-
-    if(result.score >= 5){
-
-      const msg = `
-🚀 NEW SNIPER ALERT
+      if(result.score >= 6){
+        const msg = `
+🚀 SNIPER ALERT
 
 🪙 ${token}
 
-💧 LIQ: $${overview.liquidity}
-📊 VOL: $${overview.volume24h}
+💧 LIQ: $${Math.round(data.liquidity)}
+📊 VOL: $${Math.round(data.volume)}
 
 🎯 SNIPERS: ${result.snipers}
 ⭐ SCORE: ${result.score}
 
-🔥 SIGNAL: ${result.verdict}
+🔥 ${result.verdict}
 
 📊 https://dexscreener.com/solana/${token}
 `;
 
-      bot.sendMessage(process.env.CHAT_ID, msg);
+        bot.sendMessage(process.env.CHAT_ID, msg);
 
-      SENT.add(token);
-      setTimeout(()=>SENT.delete(token), 600000);
+        SENT.add(token);
+        setTimeout(()=>SENT.delete(token), 600000);
+      }
     }
+
+  }catch(e){
+    console.log("SCAN ERROR", e.message);
   }
 }
 
@@ -63,16 +68,17 @@ bot.on("message", async (msg)=>{
   const regex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
   if(!regex.test(text)) return;
 
-  const overview = await getTokenOverview(text);
-  const txs = await getTx(text);
+  const data = await getTokenData(text);
+  if(!data) return bot.sendMessage(msg.chat.id, "❌ No data");
 
-  const result = analyze(overview, txs);
+  const txs = await getTx(text);
+  const result = analyze(data, txs);
 
   bot.sendMessage(msg.chat.id, `
 🪙 ${text}
 
-💧 LIQ: $${overview?.liquidity}
-📊 VOL: $${overview?.volume24h}
+💧 LIQ: $${Math.round(data.liquidity)}
+📊 VOL: $${Math.round(data.volume)}
 
 🎯 SNIPERS: ${result.snipers}
 ⭐ SCORE: ${result.score}

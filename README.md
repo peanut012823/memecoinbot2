@@ -1,33 +1,27 @@
 
-# 🚀 V9 Live Sniper Bot
+# 🚀 V9 Fixed Pro Sniper Bot
 
-Real-time Solana memecoin sniper bot.
-
-## Features
-- Auto token discovery
-- Live alerts
-- Sniper detection
-- Moralis + Helius data
+Fully fixed version with:
+- Moralis + Dex fallback
+- Safe data handling
+- Better scoring system
+- Reduced false alerts
 
 ## Setup
-
-1. Install dependencies:
-npm install
-
+1. npm install
 2. Create .env:
 TELEGRAM_TOKEN=
 HELIUS_API_KEY=
 MORALIS_API_KEY=
 CHAT_ID=
+3. npm start
 
-3. Run:
-npm start
-
-## Usage
-Paste token CA in chat for manual scan.
-
-## Alerts
-Bot auto sends strong signals every 30 seconds.
+## Features
+- Auto scan every 30s
+- Live sniper alerts
+- Manual CA scan
+- Filters low-quality tokens
 
 ## Notes
-Use at your own risk. Not financial advice.
+- Not financial advice
+- Use risk management

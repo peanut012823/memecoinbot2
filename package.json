@@ -1,6 +1,6 @@
 {
-  "name": "v9-live-sniper-bot",
-  "version": "9.0.0",
+  "name": "v9-fixed-pro",
+  "version": "9.1.0",
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js"

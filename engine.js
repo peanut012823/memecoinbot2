@@ -1,10 +1,10 @@
 
-function analyze(overview, txs){
+function analyze(data, txs){
 
-  const liq = Number(overview?.liquidity || 0);
-  const vol = Number(overview?.volume24h || 0);
+  const liq = data?.liquidity || 0;
+  const vol = data?.volume || 0;
 
-  const early = txs.slice(0,30);
+  const early = txs.slice(0, 30);
   const wallets = new Set();
 
   early.forEach(tx=>{
@@ -17,14 +17,24 @@ function analyze(overview, txs){
 
   let score = 0;
 
-  if(liq > 1500) score += 2;
-  if(vol > 5000) score += 2;
-  if(snipers > 10) score += 2;
-  if(snipers < 5) score += 1;
+  if(liq > 1000) score += 2;
+  if(liq > 5000) score += 1;
 
-  let verdict = "SKIP";
-  if(score >= 5) verdict = "🔥 STRONG";
-  else if(score >= 3) verdict = "⚠️ WATCH";
+  if(vol > 3000) score += 1;
+  if(vol > 10000) score += 2;
+
+  if(snipers > 5) score += 1;
+  if(snipers > 15) score += 2;
+  if(snipers > 40) score -= 2;
+
+  if(liq < 500) score -= 3;
+  if(vol < 1000) score -= 2;
+
+  let verdict = "❌ SKIP";
+
+  if(score >= 6) verdict = "🔥 STRONG BUY";
+  else if(score >= 4) verdict = "⚠️ WATCH";
+  else if(score >= 2) verdict = "🤔 LOW";
 
   return { snipers, score, verdict };
 }
