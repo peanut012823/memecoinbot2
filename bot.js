@@ -15,22 +15,28 @@ async function scan(){
   console.log("Scanning...");
 
   try{
-    const res = await axios.get("https://api.dexscreener.com/latest/dex/pairs/solana");
+    const res = await axios.get(
+      "https://api.dexscreener.com/latest/dex/search/?q=SOL"
+    );
+
     const pairs = res.data?.pairs || [];
 
     for(const p of pairs.slice(0, 40)){
+
       const token = p.baseToken?.address;
       if(!token || SENT.has(token)) continue;
 
       const data = await getTokenData(token);
       if(!data) continue;
 
+      // 🚫 filter trash
       if(data.liquidity < 800) continue;
 
       const txs = await getTx(token);
       const result = analyze(data, txs);
 
       if(result.score >= 6){
+
         const msg = `
 🚀 SNIPER ALERT
 
