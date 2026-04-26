@@ -8,9 +8,7 @@ async function getFromMoralis(token){
     const res = await axios.get(
       `${MORALIS}/token/mainnet/${token}/pairs`,
       {
-        headers: {
-          "X-API-Key": process.env.MORALIS_API_KEY
-        }
+        headers: { "X-API-Key": process.env.MORALIS_API_KEY }
       }
     );
 
@@ -18,13 +16,13 @@ async function getFromMoralis(token){
     if(!pairs.length) return null;
 
     pairs.sort((a,b)=>(b.liquidityUsd||0)-(a.liquidityUsd||0));
-
     const p = pairs[0];
 
     return {
       price: Number(p.priceUsd || 0),
       liquidity: Number(p.liquidityUsd || 0),
-      volume: Number(p.volume24hUsd || 0)
+      volume: Number(p.volume24hUsd || 0),
+      mcap: Number(p.fdv || 0)
     };
 
   }catch{
@@ -42,13 +40,13 @@ async function getFromDex(token){
     if(!pairs.length) return null;
 
     pairs.sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0));
-
     const p = pairs[0];
 
     return {
       price: Number(p.priceUsd || 0),
       liquidity: Number(p.liquidity?.usd || 0),
-      volume: Number(p.volume?.h24 || 0)
+      volume: Number(p.volume?.h24 || 0),
+      mcap: Number(p.fdv || 0)
     };
 
   }catch{
@@ -58,11 +56,9 @@ async function getFromDex(token){
 
 async function getTokenData(token){
   let data = await getFromMoralis(token);
-
   if(!data || data.liquidity === 0){
     data = await getFromDex(token);
   }
-
   return data;
 }
 

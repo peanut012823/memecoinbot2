@@ -1,27 +1,20 @@
 
-# 🚀 V9 Fixed Pro Sniper Bot
+# 🚀 V10 Real Sniper Bot
 
-Fully fixed version with:
+## Features
+- Liquidity event detection
+- Volume spike detection
+- Wallet memory (smart money hint)
+- MCAP targeting
 - Moralis + Dex fallback
-- Safe data handling
-- Better scoring system
-- Reduced false alerts
 
 ## Setup
 1. npm install
-2. Create .env:
-TELEGRAM_TOKEN=
-HELIUS_API_KEY=
-MORALIS_API_KEY=
-CHAT_ID=
+2. Create .env
 3. npm start
 
-## Features
-- Auto scan every 30s
-- Live sniper alerts
-- Manual CA scan
-- Filters low-quality tokens
+## Usage
+Paste CA or wait for auto alerts.
 
 ## Notes
-- Not financial advice
-- Use risk management
+Not financial advice. Use risk management.

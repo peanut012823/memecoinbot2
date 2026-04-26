@@ -1,6 +1,6 @@
 {
-  "name": "v9-fixed-pro",
-  "version": "9.1.0",
+  "name": "v10-real-sniper",
+  "version": "10.0.0",
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js"
