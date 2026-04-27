@@ -5,14 +5,13 @@ const axios = require("axios");
 
 const { getTokenData } = require("./data");
 const { getTx } = require("./helius");
-const { analyze } = require("./engine");
+const { updateWallets, getSmartWallets } = require("./walletAI");
+const { detectWhaleBuys } = require("./whale");
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
 
-const SENT = new Set();
-
 async function scan(){
-  console.log("Scanning V10...");
+  console.log("Scanning V11...");
 
   try{
     const res = await axios.get("https://api.dexscreener.com/latest/dex/search/?q=SOL");
@@ -20,43 +19,50 @@ async function scan(){
 
     for(const p of pairs.slice(0, 40)){
       const token = p.baseToken?.address;
-      if(!token || SENT.has(token)) continue;
+      if(!token) continue;
 
       const data = await getTokenData(token);
       if(!data) continue;
 
-      if(data.liquidity < 800) continue;
-
       const txs = await getTx(token);
-      const result = analyze(data, txs);
 
-      if(result.score >= 7){
-        const msg = `
-🚀 V10 SNIPER ALERT
+      const wallets = new Set();
+      txs.slice(0,40).forEach(tx=>{
+        tx.tokenTransfers?.forEach(t=>{
+          if(t.toUserAccount) wallets.add(t.toUserAccount);
+        });
+      });
 
-🪙 ${token}
+      const walletList = [...wallets];
+      updateWallets(walletList);
+      const smartWallets = getSmartWallets(walletList);
+
+      const whales = detectWhaleBuys(txs, smartWallets);
+
+      if(
+        data.mcap >= 10000 &&
+        data.mcap <= 30000 &&
+        whales.length > 0
+      ){
+        const whaleInfo = whales.slice(0,3)
+          .map(w => `🐋 ${w.wallet.slice(0,6)}... $${Math.round(w.amount)}`)
+          .join("\n");
+
+        bot.sendMessage(process.env.CHAT_ID, `
+🧠 SMART MONEY ALERT
+
+🪙 ${data.name}
+📍 ${token}
 
 💰 MCAP: $${Math.round(data.mcap)}
 💧 LIQ: $${Math.round(data.liquidity)}
 📊 VOL: $${Math.round(data.volume)}
 
-🎯 SNIPERS: ${result.snipers}
-🧠 SMART WALLETS: ${result.smartWallets}
-
-🧪 LIQ EVENT: ${result.liquidityFresh ? "YES" : "NO"}
-📈 VOLUME SPIKE: ${result.volumeSpike ? "YES" : "NO"}
-
-⭐ SCORE: ${result.score}
-
-🔥 ${result.verdict}
+🐋 SMART WHALES:
+${whaleInfo}
 
 📊 https://dexscreener.com/solana/${token}
-`;
-
-        bot.sendMessage(process.env.CHAT_ID, msg);
-
-        SENT.add(token);
-        setTimeout(()=>SENT.delete(token), 600000);
+`);
       }
     }
 
@@ -66,32 +72,3 @@ async function scan(){
 }
 
 setInterval(scan, 30000);
-
-bot.on("message", async (msg)=>{
-  const text = msg.text?.trim();
-  if(!text || text.startsWith("/")) return;
-
-  const regex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-  if(!regex.test(text)) return;
-
-  const data = await getTokenData(text);
-  if(!data) return bot.sendMessage(msg.chat.id, "❌ No data");
-
-  const txs = await getTx(text);
-  const result = analyze(data, txs);
-
-  bot.sendMessage(msg.chat.id, `
-🪙 ${text}
-
-💰 MCAP: $${Math.round(data.mcap)}
-💧 LIQ: $${Math.round(data.liquidity)}
-📊 VOL: $${Math.round(data.volume)}
-
-🎯 SNIPERS: ${result.snipers}
-🧠 SMART WALLETS: ${result.smartWallets}
-
-⭐ SCORE: ${result.score}
-
-📊 ${result.verdict}
-`);
-});

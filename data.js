@@ -5,12 +5,9 @@ const MORALIS = "https://solana-gateway.moralis.io";
 
 async function getFromMoralis(token){
   try{
-    const res = await axios.get(
-      `${MORALIS}/token/mainnet/${token}/pairs`,
-      {
-        headers: { "X-API-Key": process.env.MORALIS_API_KEY }
-      }
-    );
+    const res = await axios.get(`${MORALIS}/token/mainnet/${token}/pairs`, {
+      headers: { "X-API-Key": process.env.MORALIS_API_KEY }
+    });
 
     const pairs = res.data?.result || [];
     if(!pairs.length) return null;
@@ -19,6 +16,7 @@ async function getFromMoralis(token){
     const p = pairs[0];
 
     return {
+      name: p.baseToken?.name || p.baseToken?.symbol || "Unknown",
       price: Number(p.priceUsd || 0),
       liquidity: Number(p.liquidityUsd || 0),
       volume: Number(p.volume24hUsd || 0),
@@ -32,10 +30,7 @@ async function getFromMoralis(token){
 
 async function getFromDex(token){
   try{
-    const res = await axios.get(
-      `https://api.dexscreener.com/latest/dex/tokens/${token}`
-    );
-
+    const res = await axios.get(`https://api.dexscreener.com/latest/dex/tokens/${token}`);
     const pairs = res.data?.pairs || [];
     if(!pairs.length) return null;
 
@@ -43,6 +38,7 @@ async function getFromDex(token){
     const p = pairs[0];
 
     return {
+      name: p.baseToken?.name || p.baseToken?.symbol || "Unknown",
       price: Number(p.priceUsd || 0),
       liquidity: Number(p.liquidity?.usd || 0),
       volume: Number(p.volume?.h24 || 0),

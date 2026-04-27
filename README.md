@@ -1,20 +1,13 @@
 
-# 🚀 V10 Real Sniper Bot
+# V11 Smart Money Whale AI
 
 ## Features
-- Liquidity event detection
-- Volume spike detection
-- Wallet memory (smart money hint)
-- MCAP targeting
-- Moralis + Dex fallback
+- Smart wallet scoring
+- Whale buy detection (filtered)
+- MCAP sniper targeting (10k–30k)
+- Token name display
 
 ## Setup
-1. npm install
-2. Create .env
-3. npm start
-
-## Usage
-Paste CA or wait for auto alerts.
-
-## Notes
-Not financial advice. Use risk management.
+npm install
+setup .env
+npm start
